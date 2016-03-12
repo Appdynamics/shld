@@ -39,7 +39,7 @@ If a particular source command should *not* be expanded, include the comment
 """
 
 USAGE = """\
-Usage: shld.py shell-script.sh [ output-file ]
+Usage: shld.py [options] shell-script.sh [ output-file ]
 
 Options:
   -f | --force      Overwrite output-file, if it exists.
