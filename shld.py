@@ -108,9 +108,13 @@ def process_file(input_filename, output_fd, depth):
             # zero-indexing line_number because we are only using it for an
             # error reporting case where we WANT to reference the previous line.
             line_number = 0
-        # pushd
-        saved_cwd = os.getcwd()
-        os.chdir(os.path.dirname(input_filename))
+        # conditional pushd
+        input_dirname = os.path.dirname(input_filename)
+        if input_dirname:
+            saved_cwd = os.getcwd()
+            os.chdir(input_dirname)
+        else:
+            saved_cwd = None
         while True:
             line = input_fd.readline()
             if line == '':
@@ -138,7 +142,8 @@ def process_file(input_filename, output_fd, depth):
                     output_fd.write(line)
             line_number += 1
         # popd
-        os.chdir(saved_cwd)
+        if saved_cwd:
+            os.chdir(saved_cwd)
 
 cmdline = custom_argparse.ArgumentParser(
     description=DESCRIPTION,

@@ -60,7 +60,6 @@ class TestShldContentHandling(unittest.TestCase):
             )
         self.assertEqual(context_mgr.exception.returncode, IMPROPER_USE_OF_SHLDIGNORE)
 
-
     def test_unsupported_shell(self):
         with self.assertRaises(subprocess.CalledProcessError) as context_mgr:
             subprocess.check_call(
@@ -167,6 +166,21 @@ class TestShldFileHandling(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tempdir)
         os.chdir(self.saved_cwd)
+
+    def test_input_file_in_cwd(self):
+        self.assertEquals(
+            subprocess.check_call(
+                (
+                    shld_py,
+                    'simple.sh'
+                ),
+                cwd=os.path.join(
+                    os.getcwd(),
+                    'resources'
+                )
+            ),
+            0
+        )
 
     def test_non_writeable_output_file(self):
         temp_filename = os.path.join(self.tempdir, 'out.sh')
