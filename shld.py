@@ -54,7 +54,7 @@ SUPPORTED_SHELLS = (
     'ksh'
 )
 SHLDIGNORE_COMMENT_PATTERN = re.compile(ur'^\s*#shldignore', re.UNICODE | re.IGNORECASE)
-SOURCE_CMD_PATTERN = re.compile(ur'^\s*(?:source|\.)\s+\.*', re.UNICODE)
+SOURCE_CMD_PATTERN = re.compile(ur'^\s*(?:source|\.)\s+.*', re.UNICODE)
 
 # sad excuse for an enum
 OPEN_FAILED = 1
