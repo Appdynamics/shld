@@ -54,7 +54,7 @@ SUPPORTED_SHELLS = (
     'ksh'
 )
 SHLDIGNORE_COMMENT_PATTERN = re.compile(ur'^\s*#shldignore', re.UNICODE | re.IGNORECASE)
-SOURCE_CMD_PATTERN = re.compile(ur'^\s*(?:source|\.)\s+\.*', re.UNICODE)
+SOURCE_CMD_PATTERN = re.compile(ur'^\s*(?:source|\.)\s+[^\s]+.*', re.UNICODE)
 
 # sad excuse for an enum
 OPEN_FAILED = 1
@@ -108,13 +108,13 @@ def process_file(input_filename, output_fd, depth):
             # zero-indexing line_number because we are only using it for an
             # error reporting case where we WANT to reference the previous line.
             line_number = 0
-        # conditional pushd
+        # pushd
         input_dirname = os.path.dirname(input_filename)
         if input_dirname:
             saved_cwd = os.getcwd()
             os.chdir(input_dirname)
         else:
-            saved_cwd = None
+            saved_cwd = '.'
         while True:
             line = input_fd.readline()
             if line == '':
@@ -133,8 +133,19 @@ def process_file(input_filename, output_fd, depth):
                 output_fd.write(line)
             else:
                 if SOURCE_CMD_PATTERN.match(line):
+                    split_line = shlex.split(line)
+                    if len(split_line) < 2:
+                        sys.stderr.write(
+                            "Error: false positive for 'source' line in:\n" +
+                            "{0}\nLine number: {1}\nOffending line:\n{2}\n".format(
+                                os.path.join(saved_cwd, input_filename),
+                                line_number + 1, # line_number normally indexed from 0
+                                line
+                            )
+                        )
+                        exit(255)
                     process_file(
-                        shlex.split(line)[1],  # get the filename that comes after the source command
+                        split_line[1],  # get the filename that comes after the source command
                         output_fd,
                         depth + 1
                     )
@@ -142,8 +153,7 @@ def process_file(input_filename, output_fd, depth):
                     output_fd.write(line)
             line_number += 1
         # popd
-        if saved_cwd:
-            os.chdir(saved_cwd)
+        os.chdir(saved_cwd)
 
 cmdline = custom_argparse.ArgumentParser(
     description=DESCRIPTION,
@@ -165,7 +175,7 @@ if num_filenames == 2:
     output_filename = filenames[1]
     if os.access(output_filename, os.F_OK):  # exists
         if not args.force:
-            sys.stderr.write("Error: File {0} exists.\nUse '-f' to overwrite.".format(output_filename))
+            sys.stderr.write("Error: File {0} exists.\nUse '-f' to overwrite.\n".format(output_filename))
             exit(FILE_EXISTS)
         if not os.access(output_filename, os.W_OK):
             sys.stderr.write('Error: File {0} not writeable.\n'.format(output_filename))
